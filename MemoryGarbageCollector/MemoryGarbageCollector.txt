@@ -1,6 +1,6 @@
 ## Title: Memory Garbage Collector
-## Version: 1.0.1
-## APIVersion: 101039
+## Version: 1.0.2
+## APIVersion: 101041
 ## Author: @BioNik12 [EU]
 
 ## DependsOn: LibAddonMenu-2.0
