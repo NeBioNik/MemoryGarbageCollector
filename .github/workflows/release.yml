@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - '*.*.*'
+  pull_request:
+    branches:
+      - main
+
+env:
+  ADDON_NAME: 'MemoryGarbageCollector'
+
+jobs:
+  release:
+    name: "release"
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Get addon variables
+        run: |
+          version=$(echo "${{ github.ref_name }}" | sed -e 's/[^[:alnum:]._-]/-/g')
+          
+          echo "ADDON_VERSION=$version" >> $GITHUB_ENV
+          echo "ADDON_ZIP_NAME=${{ env.ADDON_NAME }}-$version.zip" >> $GITHUB_ENV
+
+
+      - name: Replace placeholders in addon files
+        run: |
+          cd ${{ env.ADDON_NAME }}
+          
+          echo "Version: ${{ env.ADDON_VERSION }}"
+          
+          # Replace text version
+          sed -i "s/version = \"dev\"/version = \"${{ env.ADDON_VERSION }}\"/g" ${{ env.ADDON_NAME }}.lua
+          sed -i "s/## Version: dev/## Version: ${{ env.ADDON_VERSION }}/g" ${{ env.ADDON_NAME }}.addon
+          
+          # Replace numeric version only for tag build
+          if [ "${{ github.ref_type }}" == "tag" ]; then
+          
+            # Split major.minor.patch
+            IFS='.' read -r MAJOR MINOR PATCH <<< "${{ github.ref_name }}"
+          
+            # Pad every part to 3 digit
+            MAJOR_PAD=$(printf "%03d" "$MAJOR")
+            MINOR_PAD=$(printf "%03d" "$MINOR")
+            PATCH_PAD=$(printf "%03d" "$PATCH")
+            
+            VERSION_INT=$((10#$MAJOR_PAD$MINOR_PAD$PATCH_PAD))
+          
+            echo "AddOnVersion: $VERSION_INT"
+          
+            sed -i "s/## AddOnVersion: 99999999/## AddOnVersion: $VERSION_INT/g" ${{ env.ADDON_NAME }}.addon
+          fi
+
+      - name: Create ZIP archive
+        run: |
+          zip -r --quiet "$(pwd)/${{ env.ADDON_ZIP_NAME }}" "${{ env.ADDON_NAME }}"
+
+      - name: Extract latest changelog entry
+        run: |
+          awk '/^## / { if (!found) { found=1; print; next } else { exit } } found' CHANGELOG.md > latest_changes.md
+          cat latest_changes.md
+
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        if: ${{ github.ref_type == 'tag' }}
+        with:
+          name: "${{ env.ADDON_VERSION }}"
+          artifacts: "${{ env.ADDON_ZIP_NAME }}"
+          artifactContentType: application/zip
+          bodyFile: latest_changes.md
+          prerelease: true
+          makeLatest: true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        if: ${{ github.ref_type != 'tag' }}
+        with:
+          path: ${{ env.ADDON_ZIP_NAME }}
+
+          retention-days: 3
+#      - name: Send to ESOUI
+#        env:
+#          ESOUI_API_KEY: ${{ secrets.ESOUI_API_KEY }}
+#          ADDON_ID: 2311
+#        run: |
+#          curl -X POST \
+#            -H "x-api-token: $ESOUI_API_KEY" \
+#            -F "id=${ADDON_ID}" \
+#            -F "version=${{ env.ADDON_VERSION }}" \
+#            -F "updatefile=@${{ env.ADDON_ZIP_NAME }}" \
+#            -F "changelog=$(cat CHANGELOG.md)" \
+#            https://api.esoui.com/addons/update
