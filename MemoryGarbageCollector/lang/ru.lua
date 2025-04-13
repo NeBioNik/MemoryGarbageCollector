@@ -1,4 +1,4 @@
-local Strings = {
+local strings = {
     ADDON_DESCRIPTION = "Включённый аддон будет выполнять сбор мусора LUA (garbage collect) при превышения текущего потребления памяти выше заданной планки.",
     AUTO_CLEAR = "Включить очистку",
     AUTO_CLEAR_TOOLTIP = "Включить автоматическую очистку памяти от неиспользуемыых переменных.",
@@ -16,7 +16,6 @@ local Strings = {
     MEMORY_OVERFLOW_REACHED = "|ceeeeeeДо: |cff7d77%d Мб; |ceeeeeeПосле: |c77ff7a%d Мб; |ceeeeeeОсвобождено: |cAFD3FF%d Мб.",
 }
 
-for stringId, stringValue in pairs(Strings) do
-    ZO_CreateStringId(stringId, stringValue)
-    SafeAddVersion(stringId, 1)
+for id, val in pairs(strings) do
+    SafeAddString(_G[id], val, 1)
 end

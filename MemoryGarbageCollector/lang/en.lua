@@ -1,4 +1,4 @@
-local Strings = {
+local strings = {
     ADDON_DESCRIPTION = "The enabled add-on will perform LUA garbage collection when the current memory consumption exceeds the specified level.",
     AUTO_CLEAR = "Enable cleanup",
     AUTO_CLEAR_TOOLTIP = "Enable automatic memory cleanup of unused variables.",
@@ -16,7 +16,7 @@ local Strings = {
     MEMORY_OVERFLOW_REACHED = "|ceeeeeeBefore: |cff7d77%d MB; |ceeeeeeAfter: |c77ff7a%d MB; |ceeeeeeCleared: |cAFD3FF%d MB.",
 }
 
-for stringId, stringValue in pairs(Strings) do
-    ZO_CreateStringId(stringId, stringValue)
-    SafeAddVersion(stringId, 1)
+for id, val in pairs(strings) do
+    ZO_CreateStringId(id, val)
+    SafeAddVersion(id, 1)
 end
