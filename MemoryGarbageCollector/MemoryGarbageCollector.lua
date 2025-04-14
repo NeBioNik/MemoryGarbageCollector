@@ -64,7 +64,7 @@ function MGC:InitMenu()
     local optionsTable = {
         {
             type = "description",
-            text = GFS(ADDON_DESCRIPTION),
+            text = GFS(SI_MGC_ADDON_DESCRIPTION),
         },
         {
             type = "divider",
@@ -72,8 +72,8 @@ function MGC:InitMenu()
         },
         {
             type = "checkbox",
-            name = GFS(AUTO_CLEAR),
-            tooltip = GFS(AUTO_CLEAR_TOOLTIP),
+            name = GFS(SI_MGC_AUTO_CLEAR),
+            tooltip = GFS(SI_MGC_AUTO_CLEAR_TOOLTIP),
             getFunc = function()
                 return self.config.autoClear
             end,
@@ -85,8 +85,8 @@ function MGC:InitMenu()
         },
         {
             type = "slider",
-            name = GFS(REFRESH_RATE),
-            tooltip = GFS(REFRESH_RATE_TOOLTIP),
+            name = GFS(SI_MGC_REFRESH_RATE),
+            tooltip = GFS(SI_MGC_REFRESH_RATE_TOOLTIP),
             min = 1,
             max = 60,
             decimals = 0,
@@ -104,8 +104,8 @@ function MGC:InitMenu()
         },
         {
             type = "dropdown",
-            name = GFS(COMPARISON_METHOD),
-            tooltip = GFS(COMPARISON_METHOD_TOOLTIP),
+            name = GFS(SI_MGC_COMPARISON_METHOD),
+            tooltip = GFS(SI_MGC_COMPARISON_METHOD_TOOLTIP),
             disabled = function()
                 return not self.config.autoClear
             end,
@@ -117,13 +117,13 @@ function MGC:InitMenu()
                 self:refreshSettings()
             end,
             choicesValues = { 1, 2 },
-            choices = { GFS(OVERFLOW_RELATIVE), GFS(OVERFLOW_ABSOLUTE) },
+            choices = { GFS(SI_MGC_OVERFLOW_RELATIVE), GFS(SI_MGC_OVERFLOW_ABSOLUTE) },
             default = DEFAULT_SAVED_VARS.comparisonMethod,
         },
         {
             type = "slider",
-            name = GFS(OVERFLOW_RELATIVE),
-            tooltip = GFS(OVERFLOW_RELATIVE_TOOLTIP),
+            name = GFS(SI_MGC_OVERFLOW_RELATIVE),
+            tooltip = GFS(SI_MGC_OVERFLOW_RELATIVE_TOOLTIP),
             min = 5,
             max = 50,
             step = 5,
@@ -142,8 +142,8 @@ function MGC:InitMenu()
         },
         {
             type = "slider",
-            name = GFS(OVERFLOW_ABSOLUTE),
-            tooltip = GFS(OVERFLOW_ABSOLUTE_TOOLTIP),
+            name = GFS(SI_MGC_OVERFLOW_ABSOLUTE),
+            tooltip = GFS(SI_MGC_OVERFLOW_ABSOLUTE_TOOLTIP),
             min = 30,
             max = 500,
             step = 25,
@@ -163,7 +163,7 @@ function MGC:InitMenu()
         {
             type = "checkbox",
             name = GetString(SI_SETTINGSYSTEMPANEL6),
-            tooltip = GetString(SHOW_DEBUG_MESSAGES),
+            tooltip = GetString(SI_MGC_SHOW_DEBUG_MESSAGES),
             disabled = function()
                 return not self.config.autoClear
             end,
@@ -214,7 +214,7 @@ function MGC:calcMaxMemory(memory)
     -- Round to 5 MB
     max = math.ceil(max / 5) * 5
 
-    self:sendDebugMessage(GFS(MEMORY_INIT_MAX, max))
+    self:sendDebugMessage(GFS(SI_MGC_MEMORY_INIT_MAX, max))
     self.maxMemoryUsage = max
 end
 
@@ -231,7 +231,7 @@ function MGC:checkGarbage()
     local current = self:currentMemory()
 
     -- Check currently used memory for overflow limit.
-    self:sendDebugMessage(GFS(MEMORY_OVERFLOW_DEBUG, current, limit))
+    self:sendDebugMessage(GFS(SI_MGC_MEMORY_OVERFLOW_DEBUG, current, limit))
     if current <= limit then
         return
     end
@@ -242,7 +242,7 @@ function MGC:checkGarbage()
     local after = self:currentMemory()
     self:calcMaxMemory(after)
 
-    self:chatMessage(GFS(MEMORY_OVERFLOW_REACHED, current, after, current - after))
+    self:chatMessage(GFS(SI_MGC_MEMORY_OVERFLOW_REACHED, current, after, current - after))
 end
 
 -- Send message to game chat
