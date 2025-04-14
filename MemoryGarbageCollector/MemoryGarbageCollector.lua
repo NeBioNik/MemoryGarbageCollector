@@ -37,6 +37,7 @@ local DEFAULT_SAVED_VARS = {
     overflowRelative = 10, -- percent
     overflowAbsolute = 50, -- MB
     showDebugMessages = false,
+    silentMode = false,
 }
 
 local SF = string.format
@@ -67,6 +68,7 @@ function MGC.InitMenu()
         type = "panel",
         name = MGC.fullName,
         author = MGC.author,
+        version = MGC.version,
         registerForRefresh = true,
         registerForDefaults = true,
     }
@@ -172,19 +174,30 @@ function MGC.InitMenu()
         },
         {
             type = "checkbox",
-            name = GetString(SI_SETTINGSYSTEMPANEL6),
+            name = "Debug",
             tooltip = GetString(SI_MGC_SHOW_DEBUG_MESSAGES),
             disabled = function()
-                return not config.autoClear
+                return config.silentMode
             end,
             getFunc = function()
                 return config.showDebugMessages
             end,
             setFunc = function(v)
                 config.showDebugMessages = v
-                MGC.refreshSettings()
             end,
             default = DEFAULT_SAVED_VARS.showDebugMessages,
+        },
+        {
+            type = "checkbox",
+            name = "Silent Mode",
+            tooltip = GetString(SI_MGC_SILENT_MODE),
+            getFunc = function()
+                return config.silentMode
+            end,
+            setFunc = function(v)
+                config.silentMode = v
+            end,
+            default = DEFAULT_SAVED_VARS.silentMode,
         },
     }
 
@@ -262,6 +275,11 @@ end
 
 -- Send message to game chat
 function MGC.chatMessage(message)
+    -- Do not send anything when silentMode on.
+    if MGC.config.silentMode then
+        return
+    end
+
     if LibChatMessage then
         if not MGC.chat then
             MGC.chat = LibChatMessage(MGC.shortName, MGC.shortName)

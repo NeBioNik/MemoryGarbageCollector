@@ -11,6 +11,7 @@ local strings = {
     SI_MGC_OVERFLOW_ABSOLUTE = "Абсолютное значение (Мб)",
     SI_MGC_OVERFLOW_ABSOLUTE_TOOLTIP = "При превышении потребления памяти на N Мб, относительно стартового значения, будет произведена очистка.",
     SI_MGC_SHOW_DEBUG_MESSAGES = "Показывать отладочные сообщения",
+    SI_MGC_SILENT_MODE = "Тихий режим (отключить ВСЕ сообщения чата)",
     SI_MGC_MEMORY_INIT_MAX = "|ceeeeeeУстановлен лимит потребления памяти: |cAFD3FF%d Мб.",
     SI_MGC_MEMORY_OVERFLOW_DEBUG = "|ceeeeeeСейчас: |c77ff7a%d Мб; |ceeeeeeЛимит: |cAFD3FF%d Мб.",
     SI_MGC_MEMORY_OVERFLOW_REACHED = "|ceeeeeeДо: |cff7d77%d Мб; |ceeeeeeПосле: |c77ff7a%d Мб; |ceeeeeeОсвобождено: |cAFD3FF%d Мб.",

@@ -1,3 +1,6 @@
+## 1.1.3 2025.04.15
+- Add SilentMode setting.
+
 ## 1.1.2 2025.04.14
 - Add CI action for ESOUI upload
 

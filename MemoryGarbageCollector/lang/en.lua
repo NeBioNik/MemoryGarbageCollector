@@ -11,6 +11,7 @@ local strings = {
     SI_MGC_OVERFLOW_ABSOLUTE = "Absolute (MB)",
     SI_MGC_OVERFLOW_ABSOLUTE_TOOLTIP = "The value of memory exceeded at which it is necessary to cause a cleanup",
     SI_MGC_SHOW_DEBUG_MESSAGES = "Show debug messages",
+    SI_MGC_SILENT_MODE = "Silent Mode (Disable ALL chat messages)",
     SI_MGC_MEMORY_INIT_MAX = "|ceeeeeeMemory limit set: |cAFD3FF%d MB.",
     SI_MGC_MEMORY_OVERFLOW_DEBUG = "|ceeeeeeNow: |c77ff7a%d MB; |ceeeeeeLimit: |cAFD3FF%d MB.",
     SI_MGC_MEMORY_OVERFLOW_REACHED = "|ceeeeeeBefore: |cff7d77%d MB; |ceeeeeeAfter: |c77ff7a%d MB; |ceeeeeeCleared: |cAFD3FF%d MB.",
