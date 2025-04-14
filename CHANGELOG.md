@@ -1,3 +1,9 @@
+## 1.1.1
+- Update DependsOn LibAddonMenu version.
+- Update global strings.
+- Update addon structure.
+- Thanks, Baertram, for pointing to those problems.
+
 ## 1.1.0
 - Rewrite addon structure `.txt` => `.addon`.
 - Add CI action for automatic build.
