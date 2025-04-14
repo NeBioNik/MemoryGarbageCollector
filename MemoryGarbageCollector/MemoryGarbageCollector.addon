@@ -4,7 +4,7 @@
 ## APIVersion: 101044 101045
 ## AddOnVersion: 99999999
 ## SavedVariables: MemoryGarbageCollectorSV
-## DependsOn: LibAddonMenu-2.0>=32
+## DependsOn: LibAddonMenu-2.0>=38
 ## OptionalDependsOn: LibChatMessage
 
 ## This Add-on is not created by, affiliated with or sponsored by ZeniMax Media
