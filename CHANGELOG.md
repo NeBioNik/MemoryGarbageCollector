@@ -1,10 +1,10 @@
-## 1.1.1
+## 1.1.1 2025.04.14
 - Update DependsOn LibAddonMenu version.
 - Update global strings.
 - Update addon structure.
 - Thanks, Baertram, for pointing to those problems.
 
-## 1.1.0
+## 1.1.0 2025.04.13
 - Rewrite addon structure `.txt` => `.addon`.
 - Add CI action for automatic build.
 - Update README and CHANGELOG.
@@ -13,7 +13,7 @@
 ## 1.0.2
 - Bump to API version 101041 ( U41 ).
 
-## 1.0.1.
+## 1.0.1
 - Bump to API version 101039 ( U39 ).
 
 ## 1.0.0 
