@@ -1,3 +1,6 @@
+## 1.1.2 2025.04.14
+- Add CI action for ESOUI upload
+
 ## 1.1.1 2025.04.14
 - Update DependsOn LibAddonMenu version.
 - Update global strings.

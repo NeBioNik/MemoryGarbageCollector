@@ -15,22 +15,22 @@ env:
 
 jobs:
   release:
-    name: "release"
+    name: "Make release"
     runs-on: ubuntu-latest
-    permissions: write-all
+    permissions:
+      contents: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Get addon variables
+      - name: Set version variables
         run: |
           version=$(echo "${{ github.ref_name }}" | sed -e 's/[^[:alnum:]._-]/-/g')
           
           echo "ADDON_VERSION=$version" >> $GITHUB_ENV
           echo "ADDON_ZIP_NAME=${{ env.ADDON_NAME }}-$version.zip" >> $GITHUB_ENV
 
-
-      - name: Replace placeholders in addon files
+      - name: Update version in files
         run: |
           cd ${{ env.ADDON_NAME }}
           
@@ -62,38 +62,41 @@ jobs:
         run: |
           zip -r --quiet "$(pwd)/${{ env.ADDON_ZIP_NAME }}" "${{ env.ADDON_NAME }}"
 
-      - name: Extract latest changelog entry
+      - name: Upload build artifacts
+        if: ${{ github.ref_type != 'tag' }}
+        uses: actions/upload-artifact@v4
+        with:
+          path: ${{ env.ADDON_ZIP_NAME }}
+          retention-days: 3
+
+      - name: Extract latest changes for GitHub Release
+        if: ${{ github.ref_type == 'tag' }}
         run: |
           awk '/^## / { if (!found) { found=1; print; next } else { exit } } found' CHANGELOG.md > latest_changes.md
           cat latest_changes.md
 
       - name: Create GitHub Release
-        uses: ncipollo/release-action@v1
         if: ${{ github.ref_type == 'tag' }}
+        uses: ncipollo/release-action@v1
         with:
           name: "${{ env.ADDON_VERSION }}"
           artifacts: "${{ env.ADDON_ZIP_NAME }}"
           artifactContentType: application/zip
           bodyFile: latest_changes.md
-          prerelease: true
           makeLatest: true
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        if: ${{ github.ref_type != 'tag' }}
-        with:
-          path: ${{ env.ADDON_ZIP_NAME }}
-
-          retention-days: 3
-#      - name: Send to ESOUI
-#        env:
-#          ESOUI_API_KEY: ${{ secrets.ESOUI_API_KEY }}
-#          ADDON_ID: 2311
-#        run: |
-#          curl -X POST \
-#            -H "x-api-token: $ESOUI_API_KEY" \
-#            -F "id=${ADDON_ID}" \
-#            -F "version=${{ env.ADDON_VERSION }}" \
-#            -F "updatefile=@${{ env.ADDON_ZIP_NAME }}" \
-#            -F "changelog=$(cat CHANGELOG.md)" \
-#            https://api.esoui.com/addons/update
+      - name: Upload to ESOUI
+        if: ${{ github.ref_type == 'tag' }}
+        env:
+          addon_id: ${{ vars.ESOUI_ADDON_ID }}
+          api_key: ${{ secrets.ESOUI_API_KEY }}
+          addon_version: ${{ env.ADDON_VERSION }}
+          addon_zip: ${{ env.ADDON_ZIP_NAME }}
+        run: |
+          curl --fail -X POST \
+            -H "x-api-token: $api_key" \
+            -F "id=$addon_id" \
+            -F "version=$addon_version" \
+            -F "updatefile=@$addon_zip" \
+            -F "changelog=$(cat CHANGELOG.md)" \
+            https://api.esoui.com/addons/update
