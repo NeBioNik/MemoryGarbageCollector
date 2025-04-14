@@ -1,3 +1,4 @@
+-- Core Addon Table
 MemoryGarbageCollector = {
     name = "MemoryGarbageCollector",
     version = "dev",
@@ -7,6 +8,9 @@ MemoryGarbageCollector = {
     shortName = "MGC",
     prefix = "|cbf16b9[MGC]|r",
 
+    -- Cleanup threshold
+    maxMemoryUsage = 0,
+
     chat = nil,
 
     color = {
@@ -14,13 +18,17 @@ MemoryGarbageCollector = {
         grey = "666666",
     },
 
+    -- Saved variables configuration
+    svName = "MemoryGarbageCollectorSV",
+    svVersion = 1,
     config = {}
 }
 
+local EM = EVENT_MANAGER
 local MGC = MemoryGarbageCollector
 
--- Cleanup threshold
-MGC.maxMemoryUsage = 0
+local MaxMemoryUsage = MGC.maxMemoryUsage
+local ChatColor = MGC.color
 
 local DEFAULT_SAVED_VARS = {
     autoClear = true,
@@ -38,25 +46,27 @@ local GFS = function(STR_NAME, ...)
     return SF(GetString(STR_NAME), ...)
 end
 
-function MGC:Initialize()
-    self.config = ZO_SavedVars:NewAccountWide(self.name .. 'SV', 1, nil, DEFAULT_SAVED_VARS)
+function MGC.Initialize()
+    MGC.config = ZO_SavedVars:NewAccountWide(MGC.svName, MGC.svVersion, nil, DEFAULT_SAVED_VARS)
 
-    self:InitMenu()
+    MGC.InitMenu()
 
     -- Start with 15 sec delay and calculate starting memory usage.
     zo_callLater(function()
-        self:refreshSettings()
+        MGC.refreshSettings()
     end, 15000)
 end
 
-function MGC:InitMenu()
+function MGC.InitMenu()
+    local config = MGC.config
+
     local LAM = LibAddonMenu2
-    local panelName = self.name .. "_LAM"
+    local panelName = MGC.name .. "_LAM"
 
     local panelData = {
         type = "panel",
-        name = self.fullName,
-        author = self.author,
+        name = MGC.fullName,
+        author = MGC.author,
         registerForRefresh = true,
         registerForDefaults = true,
     }
@@ -75,11 +85,11 @@ function MGC:InitMenu()
             name = GFS(SI_MGC_AUTO_CLEAR),
             tooltip = GFS(SI_MGC_AUTO_CLEAR_TOOLTIP),
             getFunc = function()
-                return self.config.autoClear
+                return config.autoClear
             end,
             setFunc = function(v)
-                self.config.autoClear = v
-                self:refreshSettings()
+                config.autoClear = v
+                MGC.refreshSettings()
             end,
             default = DEFAULT_SAVED_VARS.autoClear,
         },
@@ -91,14 +101,14 @@ function MGC:InitMenu()
             max = 60,
             decimals = 0,
             disabled = function()
-                return not self.config.autoClear
+                return not config.autoClear
             end,
             getFunc = function()
-                return self.config.refreshRate
+                return config.refreshRate
             end,
             setFunc = function(v)
-                self.config.refreshRate = v
-                self:refreshSettings()
+                config.refreshRate = v
+                MGC.refreshSettings()
             end,
             default = DEFAULT_SAVED_VARS.refreshRate,
         },
@@ -107,14 +117,14 @@ function MGC:InitMenu()
             name = GFS(SI_MGC_COMPARISON_METHOD),
             tooltip = GFS(SI_MGC_COMPARISON_METHOD_TOOLTIP),
             disabled = function()
-                return not self.config.autoClear
+                return not config.autoClear
             end,
             getFunc = function()
-                return self.config.comparisonMethod
+                return config.comparisonMethod
             end,
             setFunc = function(v)
-                self.config.comparisonMethod = v
-                self:refreshSettings()
+                config.comparisonMethod = v
+                MGC.refreshSettings()
             end,
             choicesValues = { 1, 2 },
             choices = { GFS(SI_MGC_OVERFLOW_RELATIVE), GFS(SI_MGC_OVERFLOW_ABSOLUTE) },
@@ -129,14 +139,14 @@ function MGC:InitMenu()
             step = 5,
             decimals = 0,
             disabled = function()
-                return not (self.config.autoClear and self.config.comparisonMethod == 1)
+                return not (config.autoClear and config.comparisonMethod == 1)
             end,
             getFunc = function()
-                return self.config.overflowRelative
+                return config.overflowRelative
             end,
             setFunc = function(v)
-                self.config.overflowRelative = v
-                self:refreshSettings()
+                config.overflowRelative = v
+                MGC.refreshSettings()
             end,
             default = DEFAULT_SAVED_VARS.overflowRelative,
         },
@@ -149,14 +159,14 @@ function MGC:InitMenu()
             step = 25,
             decimals = 0,
             disabled = function()
-                return not (self.config.autoClear and self.config.comparisonMethod == 2)
+                return not (config.autoClear and config.comparisonMethod == 2)
             end,
             getFunc = function()
-                return self.config.overflowAbsolute
+                return config.overflowAbsolute
             end,
             setFunc = function(v)
-                self.config.overflowAbsolute = v
-                self:refreshSettings()
+                config.overflowAbsolute = v
+                MGC.refreshSettings()
             end,
             default = DEFAULT_SAVED_VARS.overflowAbsolute,
         },
@@ -165,14 +175,14 @@ function MGC:InitMenu()
             name = GetString(SI_SETTINGSYSTEMPANEL6),
             tooltip = GetString(SI_MGC_SHOW_DEBUG_MESSAGES),
             disabled = function()
-                return not self.config.autoClear
+                return not config.autoClear
             end,
             getFunc = function()
-                return self.config.showDebugMessages
+                return config.showDebugMessages
             end,
             setFunc = function(v)
-                self.config.showDebugMessages = v
-                self:refreshSettings()
+                config.showDebugMessages = v
+                MGC.refreshSettings()
             end,
             default = DEFAULT_SAVED_VARS.showDebugMessages,
         },
@@ -182,56 +192,61 @@ function MGC:InitMenu()
     LAM:RegisterOptionControls(panelName, optionsTable)
 end
 
-function MGC:refreshSettings()
-    MGC:calcMaxMemory()
-    MGC:setRefreshTimer()
+function MGC.refreshSettings()
+    MGC.calcMaxMemory()
+    MGC.setRefreshTimer()
 end
 
-function MGC:setRefreshTimer()
+function MGC.setRefreshTimer()
     local eventName = MGC.name .. "_Auto"
     EVENT_MANAGER:UnregisterForUpdate(eventName)
 
     if MGC.config.autoClear == true then
         local refreshSeconds = MGC.config.refreshRate * 60 * 1000 -- min to seconds
         EVENT_MANAGER:RegisterForUpdate(eventName, refreshSeconds, function()
-            MGC:checkGarbage()
+            MGC.checkGarbage()
         end)
     end
 end
 
-function MGC:calcMaxMemory(memory)
+function MGC.calcMaxMemory(memory)
+    if not MGC.config.autoClear then
+        return
+    end
+
     if not memory then
-        memory = self:currentMemory()
+        memory = MGC.currentMemory()
     end
 
     local max = 1024
-    if self.config.comparisonMethod == 1 then
-        max = memory * (1 + self.config.overflowRelative / 100)
+    if MGC.config.comparisonMethod == 1 then
+        max = memory * (1 + MGC.config.overflowRelative / 100)
     else
-        max = memory + self.config.overflowAbsolute
+        max = memory + MGC.config.overflowAbsolute
     end
 
     -- Round to 5 MB
     max = math.ceil(max / 5) * 5
 
-    self:sendDebugMessage(GFS(SI_MGC_MEMORY_INIT_MAX, max))
-    self.maxMemoryUsage = max
+    MGC.sendDebugMessage(GFS(SI_MGC_MEMORY_INIT_MAX, max))
+    MaxMemoryUsage = max
 end
 
-function MGC:currentMemory()
+function MGC.currentMemory()
     return math.ceil(collectgarbage("count") / 1024)
 end
 
-function MGC:checkGarbage()
+function MGC.checkGarbage()
     if IsUnitInCombat("player") then
         return
     end
 
-    local limit = self.maxMemoryUsage or 1024;
-    local current = self:currentMemory()
+    local limit = MaxMemoryUsage or 1024;
+    local current = MGC.currentMemory()
 
     -- Check currently used memory for overflow limit.
-    self:sendDebugMessage(GFS(SI_MGC_MEMORY_OVERFLOW_DEBUG, current, limit))
+    MGC.sendDebugMessage(GFS(SI_MGC_MEMORY_OVERFLOW_DEBUG, current, limit))
+
     if current <= limit then
         return
     end
@@ -239,42 +254,39 @@ function MGC:checkGarbage()
     -- Run garbage collect when overflow is reached.
     collectgarbage("collect")
 
-    local after = self:currentMemory()
-    self:calcMaxMemory(after)
+    local after = MGC.currentMemory()
+    MGC.calcMaxMemory(after)
 
-    self:chatMessage(GFS(SI_MGC_MEMORY_OVERFLOW_REACHED, current, after, current - after))
+    MGC.chatMessage(GFS(SI_MGC_MEMORY_OVERFLOW_REACHED, current, after, current - after))
 end
 
 -- Send message to game chat
-function MGC:chatMessage(message)
+function MGC.chatMessage(message)
     if LibChatMessage then
-        if not self.chat then
-            self.chat = LibChatMessage(self.shortName, self.shortName)
+        if not MGC.chat then
+            MGC.chat = LibChatMessage(MGC.shortName, MGC.shortName)
         end
 
-        local formatted = SF("|c%s[%s]|r %s", self.color.grey, GetTimeString(), message)
-        self.chat:SetTagColor(self.color.main):Printf(formatted)
+        local formatted = SF("|c%s[%s]|r %s", ChatColor.grey, GetTimeString(), message)
+        MGC.chat:SetTagColor(ChatColor.main):Printf(formatted)
     else
-        local formatted = SF("%s |c%s[%s]|r %s", self.prefix, self.color.grey, GetTimeString(), message)
+        local formatted = SF("%s |c%s[%s]|r %s", MGC.prefix, ChatColor.grey, GetTimeString(), message)
         CHAT_SYSTEM:AddMessage(formatted)
     end
 end
 
 -- Send debug message to game chat
-function MGC:sendDebugMessage(message)
-    if self.config.showDebugMessages then
-        self:chatMessage(message)
+function MGC.sendDebugMessage(message)
+    if MGC.config.showDebugMessages then
+        MGC.chatMessage(message)
     end
 end
 
-function MGC.OnAddOnLoaded(_, addonName)
-    if addonName ~= MGC.name then
-        return
+-- Addon Initialize
+EM:RegisterForEvent(MGC.name, EVENT_ADD_ON_LOADED, function(_, name)
+    if name == MGC.name then
+        MGC.Initialize()
+
+        EM:UnregisterForEvent(MGC.name, EVENT_ADD_ON_LOADED)
     end
-
-    EVENT_MANAGER:UnregisterForEvent(MGC.name, EVENT_ADD_ON_LOADED)
-
-    MGC:Initialize()
-end
-
-EVENT_MANAGER:RegisterForEvent(MGC.name, EVENT_ADD_ON_LOADED, MGC.OnAddOnLoaded)
+end)
